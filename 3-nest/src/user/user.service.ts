@@ -25,4 +25,32 @@ export class UserService {
         this.users.set(4,new User(4,"Ash",32,"ash@email.com","12345678"));
     }
 
+    logAllUser(){
+        for(const [key,user] of this.users.entries()){
+          console.log(key);
+          user.log();
+        }
+    }
+
+    register(user:any){
+        var newUser: User;
+        newUser = new User(user?.id, user?.name, user?.age, user?.email, user?.password);
+        this.users.set(user.id, newUser);
+        this.logAllUser();
+    }
+
+    replaceValues(id:number, user:any){
+        var newUser: User;
+        newUser = new User(user?.id, user?.name, user?.age, user?.email, user?.password);
+        this.users.set(user.id, newUser);
+        this.logAllUser();
+    }
+
+    removeValues(id:number){
+        if(this.users.has(id)){
+            this.users.delete(id);
+        }
+        else console.log(id+" does not exist in database!");
+      }
+
 }

@@ -1,4 +1,7 @@
 export class User{
+    log() {
+        console.log(`${this.name} | AGE: ${this.age} | EMAIL: ${this.email}`);
+    }
     private id:number;
     private name:string;
     private age:number;
@@ -15,6 +18,11 @@ export class User{
 
     login(email:string,password:string){
         //return true or false
+        if(email === this.email && password == this.password){
+            return true;
+        }
+        else return false;
+
     }
 
     toJson(){
