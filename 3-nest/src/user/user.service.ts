@@ -10,6 +10,47 @@ export class UserService {
         this.populate();
     }
 
+    // private user:Array<{}> = [
+    //     {
+    //       "id": 1,
+    //       "name": "Finka",
+    //       "age": 28,
+    //       "email": "finka@email.com"
+    //     },
+    //     {
+    //       "id": 2,
+    //       "name": "Monika",
+    //       "age": 33,
+    //       "email": "monika@email.com"
+    //     },
+    //     {
+    //       "id": 3,
+    //       "name": "Frost",
+    //       "age": 31,
+    //       "email": "frost@email.com"
+    //     },
+    //     {
+    //       "id": 4,
+    //       "name": "Ash",
+    //       "age": 32,
+    //       "email": "ash@email.com"
+    //     },
+    //     {
+    //       "id": "11",
+    //       "name": "ela",
+    //       "age": "31",
+    //       "email": "ela@email.com"
+    //     }
+    //   ]
+    
+    searchUser(){
+      for(const user of this.users){
+        if(user['id']==="1"){
+          return user;
+        }
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////
     getAll(){
        var populatedData = [];
        for (const user of this.users.values()){
@@ -39,14 +80,14 @@ export class UserService {
         this.logAllUser();
     }
 
-    replaceValues(id:number, user:any){
+    replaceUser(id:number, user:any){
         var newUser: User;
         newUser = new User(user?.id, user?.name, user?.age, user?.email, user?.password);
-        this.users.set(user.id, newUser);
+        this.users.set(id, newUser);
         this.logAllUser();
     }
 
-    removeValues(id:number){
+    removeUser(id:number){
         if(this.users.has(id)){
             this.users.delete(id);
         }

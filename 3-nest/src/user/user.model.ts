@@ -19,9 +19,9 @@ export class User{
     login(email:string,password:string){
         //return true or false
         if(email === this.email && password == this.password){
-            return true;
+            console.log("You are logged in!");
         }
-        else return false;
+        else return console.log("Invalid Input");
 
     }
 
