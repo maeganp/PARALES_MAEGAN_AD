@@ -55,11 +55,24 @@ export class User {
   }
 
   matches(term: string): boolean {
+
+    var keys: Array<string> = Helper.describeClass(User);
+      keys = Helper.removeItemOnce(keys,'password');
+
+      for(const key of keys){
+          if(`${this[key]}` === term) return true;
+      }
+      return false;
     
    }
  
    replaceValues(body: any): boolean {
-    //hehe you didn't think I would actually give you the answers, yes?
+    var keys: Array<string> = Helper.describeClass(User);
+    keys = Helper.removeItemOnce(keys,'id');
+    for(const key of Object.keys(body)){
+      this[key]=body[key]; 
+    }
+    return false;
    }
  
    log() {

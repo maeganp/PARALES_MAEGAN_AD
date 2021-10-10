@@ -1,14 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { debug } from 'console';
+import { truncateSync } from 'fs';
+import { CRUDReturn } from './crud_return.interface';
+import { Helper } from './helper';
 import { User } from './user.model';
+
+const DEBUG: boolean = true;
 
 @Injectable()
 export class UserService {
 
     private users:Map<number,User> = new Map<number,User>();
+    email:string;
+    password:string;
+
 
     constructor(){
-        this.populate();
-    }
+      this.populate();
+      this.users=Helper.populate();
+      if (DEBUG) this.logAllUser();
+   }
 
     // private user:Array<{}> = [
     //     {
@@ -42,13 +53,21 @@ export class UserService {
     //       "email": "ela@email.com"
     //     }
     //   ]
-    
-    searchUser(){
-      for(const user of this.users){
-        if(user['id']==="1"){
-          return user;
-        }
+
+    // searchUser(){
+    //   for(const user of this.users){
+    //     if(user['id']==="1"){
+    //       return user;
+    //     }
+    //   }
+    // }
+
+    searchUser(term:string): CRUDReturn{
+      var results: Array<any> = [];
+      for(const user of this.users.values()){
+        if(user.matches(term)) results.push(user.toJson());
       }
+      return{success: results.length>0,data:results};
     }
     ////////////////////////////////////////////////////////////////////////////////////////
     getAll(){
@@ -73,11 +92,64 @@ export class UserService {
         }
     }
 
-    register(user:any){
-        var newUser: User;
-        newUser = new User(user?.id, user?.name, user?.age, user?.email, user?.password);
-        this.users.set(user.id, newUser);
-        this.logAllUser();
+    // register(user:any){
+    //     var newUser: User;
+    //     newUser = new User(user?.id, user?.name, user?.age, user?.email, user?.password);
+    //     this.users.set(user.id, newUser);
+    //     this.logAllUser();
+    // }
+
+    register(body:any):CRUDReturn{
+      try{
+        var validBody:{valid:boolean; data:string} = Helper.validBodyPut(body);
+        if(validBody.valid){
+          if(!this.emailExists(body.email)){
+            var newUser:User = new User(
+              body.name,
+              body.age,
+              body.email,
+              body.password,
+            );
+            if(this.saveToDB(newUser)){
+              if(DEBUG) this.logAllUser();
+              return{
+                success:true,
+                data:newUser.toJson(),
+              };
+            } else{
+              throw new Error('generic database error');
+              }
+          } else{
+            throw new Error(`${body.email} is already used by another user!`);
+          }
+        } else{
+            throw new Error(validBody.data);
+          }
+      }
+        catch(error){
+          console.log(error.message);
+          return{success:false, data:`Error adding account, ${error.message}`};
+          }
+      }
+
+    getOne(id:number):CRUDReturn{
+      if(this.users.has(id)){
+        return{success:true,data:this.users.get(id).toJson()};
+      } else
+        return{
+          success:false,
+          data:`User ${id} is not in database`
+        };
+    }
+
+
+
+
+    login(email:string,password:string): CRUDReturn {
+      for(const user of this.users.values()){
+        if(user.matches(email)) return user.login(password);
+      }
+      return {success:false,data:`${email} not found in database`};
     }
 
     replaceUser(id:number, user:any){
@@ -87,11 +159,169 @@ export class UserService {
         this.logAllUser();
     }
 
-    removeUser(id:number){
-        if(this.users.has(id)){
-            this.users.delete(id);
+    replaceValues(id:string,options?:{exceptionID:string}){
+      for(const user of this.users.values()){
+        if(user.replaceValues(id)){
+          if(
+            options?.exceptionID != undefined &&
+            user.replaceValues(options.exceptionID)
+          )
+          continue;
+          else return true;
         }
-        else console.log(id+" does not exist in database!");
       }
+      return false;
+    }
+
+    // removeUser(id:number){
+    //     if(this.users.has(id)){
+    //         this.users.delete(id);
+    //     }
+    //     else console.log(id+" does not exist in database!");
+    //   }
+
+      getUser(id:number){
+        return this.users.get(id).toJson();
+      }
+
+      getAllUser(){
+        var populateData = [];
+        for(const user of this.users.values()){
+          populateData.push(user.toJson());
+        }
+        return populateData;
+      }
+
+      getUserID(id:number): CRUDReturn{
+        if(this.users.has(id)){
+          return{success:true,data:this.users.get(id).toJson()};
+        } else{
+          return{
+            success:false,
+            data:`User ${id} not found`
+          };
+        }
+      }
+
+      replaceValuePut(id:number,body:any){
+        try{
+          if(this.users.has(id)){
+            var validBodyPut:{valid:boolean;data:string}=
+            Helper.validBody(body);
+            if(validBodyPut.valid){
+              if(!this.emailExists(body.email,{exceptionID:id})){
+                var user:User=this.users.get(id);
+                var success=user.replaceValues(body);
+                if(success)
+                  return{
+                    success:success,
+                    data:user.toJson(),
+                  };
+                else{
+                  throw new Error('Failed to update.');
+                }
+              } else{
+                throw new Error(`${body.email} is already existing.`);
+              }
+            } else{
+              throw new Error(validBodyPut.data);
+            }
+          } else{
+            throw new Error(`User ${id} does not exist.`);
+          }
+        } catch(error){
+          return{
+            success:false,
+            data:error.message,
+          };
+        }
+      }
+
+      loginUser(email:string,password:string){
+
+        if(email===this.email && password===this.password) console.log("Success!");
+        else console.log("Invalid!");
+      }
+     replaceValuePatch(id:number,body:any){ 
+       try{
+         if(this.users.has(id)){
+           var validBodyPatch:{valid:boolean; data:string}=
+             Helper.validBody(body);
+           if(validBodyPatch.valid){
+             if(!this.emailExists(body.email,{exceptionID:id})){
+               var user: User = this.users.get(id);
+               var success=user.replaceValues(body);
+               if(success)
+                 return{
+                   success:success,
+                   data:user.toJson(),
+                 };
+               else{
+                 throw new Error('Failed to update in db');
+               }
+             } else{
+               throw new Error(`${body.email} is already in use by another user!`);
+             }
+           } else{
+             throw new Error(validBodyPatch.data);
+           }
+         } else{
+           throw new Error(`User ${id} is not in database`);
+         }
+       } catch(error){
+         return{
+           success:false,
+           data: error.message,
+         };
+       }
+     }
+
+     deleteUser(id:number): CRUDReturn{ 
+
+      if(this.users.has(id)){
+        return{success: this.users.delete(id), data: `User ${id} has been successfully removed.`};
+      } else{
+
+        return{success:false, data:`${id}  does not exist!`};
+      }
+  }
+
+
+
+  toJson(): any{
+    throw new Error('Method not implemented. ');
+  }
+
+
+  emailExists(email:string,options?: {exceptionID : string}){ 
+    for(const user of this.users.values()){
+      if(user.matches(email)){
+        if(
+          options?.exceptionID != undefined &&
+          user.matches(options.exceptionID)
+        )
+        continue;
+        else return true;
+      }
+    }
+    return false;
+  }
+
+  saveToDB(user: User): boolean{
+    try{
+      this.users.set(user.id,user);
+      return this.users.has(user.id);
+    }catch(error){
+      console.log(error);
+      return false;
+    }
+  }
+
+  logAllUsers(){
+    console.log(this.getAll());
+  }
+
+
+
 
 }

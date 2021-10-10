@@ -21,14 +21,19 @@ export class UserController {
         return this.userService.register(body);
     }
 
-    @Patch('/replaceUser/:id')
-  replaceUser(@Body() body:any){
-    return this.userService.register(body);
-  }
+    @Patch("/:id")
+    replaceValuePatch(@Body() body:any, @Param("id") id:string){
+       return this.userService.replaceValuePatch(body,id);
+     }
 
     @Delete('/replaceUser/:id')
   removeUser(@Body() body:any){
     return this.userService.register(body);
+  }
+
+  @Get('/search/:id')
+  searchUser(@Param("id")id:string){
+    return this.userService.searchUser(id);
   }
 
 //   @Get('/search/:id')
