@@ -5,7 +5,7 @@ import { Exercise3Module } from './exercise3/exercise3.module';
 import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [Exercise3Module, UserModule],
+  imports: [UserModule],
   controllers: [AppController],
   providers: [AppService],
 })

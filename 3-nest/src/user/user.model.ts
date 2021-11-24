@@ -8,24 +8,24 @@
 //     private email:string;
 //     private password:string;
 
-    // constructor(id:number,name:string,age:number,email:string,password:string){
-    //     this.id = id;
-    //     this.name = name;
-    //     this.age = age;
-    //     this.email = email;
-    //     this.password = password;
-    // }
+// constructor(id:number,name:string,age:number,email:string,password:string){
+//     this.id = id;
+//     this.name = name;
+//     this.age = age;
+//     this.email = email;
+//     this.password = password;
+// }
 
-    // login(email:string,password:string){
-    //     //return true or false
-    //     if(email === this.email && password == this.password){
-    //         console.log("You are logged in!");
-    //     }
-    //     else return console.log("Invalid Input");
+// login(email:string,password:string){
+//     //return true or false
+//     if(email === this.email && password == this.password){
+//         console.log("You are logged in!");
+//     }
+//     else return console.log("Invalid Input");
 
-    // }
+// }
 
-    import { CRUDReturn } from './crud_return.interface';
+import { CRUDReturn } from './crud_return.interface';
 import { Helper } from './helper';
 export class User {
   public id: string;
@@ -34,12 +34,22 @@ export class User {
   private email: string;
   private password: string;
 
-  constructor(name: string, age: number, email: string, password: string) {
-    this.id = Helper.generateUID();
+  constructor(
+    name: string,
+    age: number,
+    email: string,
+    password: string,
+    id?: string,
+  ) {
     this.name = name;
     this.age = age;
     this.email = email;
     this.password = password;
+    if (id === null || id === undefined) {
+      this.id = Helper.generateUID();
+    } else {
+      this.id = id;
+    }
   }
 
   login(password: string): CRUDReturn {
@@ -55,36 +65,39 @@ export class User {
   }
 
   matches(term: string): boolean {
-
     var keys: Array<string> = Helper.describeClass(User);
-      keys = Helper.removeItemOnce(keys,'password');
+    keys = Helper.removeItemOnce(keys, 'password');
 
-      for(const key of keys){
-          if(`${this[key]}` === term) return true;
-      }
-      return false;
-    
-   }
- 
-   replaceValues(body: any): boolean {
-    var keys: Array<string> = Helper.describeClass(User);
-    keys = Helper.removeItemOnce(keys,'id');
-    for(const key of Object.keys(body)){
-      this[key]=body[key]; 
+    for (const key of keys) {
+      if (`${this[key]}` === term) return true;
     }
     return false;
-   }
- 
-   log() {
-     console.log(this.toJson());
-   }
+  }
 
-    toJson(){
-        return{
-            id:this.id,
-            name:this.name,
-            age:this.age,
-            email:this.email
-        }
+  replaceValues(body: any): boolean {
+    try {
+      var keys: Array<string> = Helper.describeClass(User);
+      keys = Helper.removeItemOnce(keys, 'id');
+      for (const key of Object.keys(body)) {
+        this[key] = body[key];
+      }
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
+  }
+
+  log() {
+    console.log(this.toJson());
+  }
+
+  toJson() {
+    return {
+      id: this.id,
+      name: this.name,
+      age: this.age,
+      email: this.email,
+    };
+  }
 }
