@@ -20,6 +20,11 @@ export class UserController {
   //     //return this.userService.login(email,password);
   // }
 
+  @Get('/test')
+  test() {
+    return this.userService.addSampleData();
+  }
+
   @Get('/all')
   getAll() {
     return this.userService.getAll();
@@ -36,7 +41,7 @@ export class UserController {
   }
   @Post('/login')
   loginUser(@Body() body: any) {
-    return this.userService.loginUser(body.email, body.password);
+    return this.userService.login(body.email, body.password);
   }
 
   @Put('/:id')

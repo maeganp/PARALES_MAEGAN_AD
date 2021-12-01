@@ -27,6 +27,7 @@
 
 import { CRUDReturn } from './crud_return.interface';
 import { Helper } from './helper';
+import * as admin from 'firebase-admin';
 export class User {
   public id: string;
   private name: string;
@@ -88,6 +89,18 @@ export class User {
     }
   }
 
+
+  async save():Promise<boolean>{
+    try {
+      console.log(this.toDbJson());
+      var result = await admin.firestore().collection("users").doc(this.id).set(this.toDbJson());
+      return result!==null&& result!==undefined;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
   log() {
     console.log(this.toJson());
   }
@@ -98,6 +111,15 @@ export class User {
       name: this.name,
       age: this.age,
       email: this.email,
+    };
+  }
+
+  toDbJson() {
+    return {
+      name: this.name,
+      age: this.age,
+      email: this.email,
+      password: this.password
     };
   }
 }
